@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>通勤スマートタイマー</title>
+  <title>通勤スマートタイマー Pro</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#64b5f6">
@@ -13,21 +13,16 @@
 
   <style>
     :root {
-      --primary-blue: #0b4ca8;       /* 濃紺のテキスト・ボーダー */
+      --primary-blue: #0b4ca8;
       --card-bg: #ffffff;
-      --card-shadow: #2290f0;        /* カード下の立体水色シャドウ */
-      --badge-green: #6ee7b7;        /* 快特バッジ (ミントグリーン) */
-      --badge-pink: #f87171;         /* 特急バッジ (コーラルピンク) */
-      --badge-gray: #94a3b8;         /* 直通バッジ (グレー) */
+      --card-shadow: #2290f0;
+      --badge-green: #10b981;  /* 快特 */
+      --badge-pink: #f43f5e;   /* 特急 */
+      --badge-blue: #0284c7;   /* 普通・乗換 */
+      --badge-gray: #64748b;   /* 直通 */
     }
 
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
       background: linear-gradient(180deg, #64b5f6 0%, #a4e1ff 40%, #68baf7 100%);
@@ -35,18 +30,49 @@
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      padding: 1.5rem 1.25rem 2rem 1.25rem;
+      padding: 1rem 1.25rem 2.5rem 1.25rem;
     }
 
-    .container {
-      width: 100%;
-      max-width: 440px;
+    .container { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 1rem; }
+
+    /* ルート選択セレクター */
+    .route-selector-box {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border: 2px solid var(--primary-blue);
+      border-radius: 20px;
+      padding: 0.6rem 0.8rem;
+      box-shadow: 0 4px 10px rgba(11, 76, 168, 0.15);
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
+      gap: 0.4rem;
+    }
+    .route-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .route-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--primary-blue);
+      white-space: nowrap;
+    }
+    .route-select {
+      flex: 1;
+      padding: 0.35rem 0.6rem;
+      border-radius: 12px;
+      border: 1.5px solid var(--primary-blue);
+      background: #ffffff;
+      color: var(--primary-blue);
+      font-size: 0.85rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
     }
 
-    /* 最上部ステータス（天気・ダイヤ種別） */
+    /* 最上部ステータス */
     .top-meta-bar {
       display: flex;
       justify-content: space-between;
@@ -55,24 +81,24 @@
       font-size: 0.82rem;
       font-weight: 700;
       color: var(--primary-blue);
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
     /* 便カード一覧コンテナ */
     #trainList {
       display: flex;
       flex-direction: column;
-      gap: clamp(1.8rem, 4vh, 3rem); /* 便と便の間隔を画面に応じて柔軟に拡大 */
+      gap: clamp(1.8rem, 4vh, 2.8rem);
     }
 
     /* 1便あたりのブロック */
     .train-block {
       display: flex;
       flex-direction: column;
-      gap: 1.1rem; /* カードと下のタイマーの間隔を広めに確保 */
+      gap: 1.1rem;
     }
 
-    /* メインのカード */
+    /* メインカード */
     .train-card {
       background: var(--card-bg);
       border: 3.5px solid var(--primary-blue);
@@ -82,7 +108,6 @@
       position: relative;
     }
 
-    /* 日付表示 */
     .card-date {
       font-size: clamp(0.95rem, 3vw, 1.1rem);
       font-weight: 700;
@@ -92,16 +117,9 @@
       align-items: baseline;
       gap: 4px;
     }
-    .card-date .day-badge {
-      font-size: clamp(1.15rem, 3.8vw, 1.35rem);
-      font-weight: 800;
-    }
-    .card-date .weekday-text {
-      font-size: 0.75rem;
-      font-weight: 700;
-    }
+    .card-date .day-badge { font-size: clamp(1.15rem, 3.8vw, 1.35rem); font-weight: 800; }
+    .card-date .weekday-text { font-size: 0.75rem; }
 
-    /* 駅名と仕切り線 */
     .station-row {
       display: flex;
       align-items: center;
@@ -109,7 +127,7 @@
       margin-bottom: 0.6rem;
     }
     .station-name {
-      font-size: clamp(1.35rem, 5.5vw, 1.7rem);
+      font-size: clamp(1.3rem, 5vw, 1.65rem);
       font-weight: 800;
       letter-spacing: -0.5px;
     }
@@ -117,11 +135,10 @@
       flex: 1;
       height: 1.5px;
       background: #94a3b8;
-      margin: 0 clamp(8px, 3vw, 16px);
+      margin: 0 clamp(6px, 2.5vw, 14px);
       opacity: 0.6;
     }
 
-    /* 時刻と乗継バッジ */
     .time-row {
       display: flex;
       justify-content: space-between;
@@ -135,7 +152,6 @@
       gap: clamp(6px, 2vw, 10px);
     }
 
-    /* 乗り換えバッジ（画面幅に連動） */
     .transfer-pill {
       font-size: clamp(0.68rem, 2.3vw, 0.82rem);
       font-weight: 700;
@@ -146,74 +162,131 @@
     }
     .pill-green { background: var(--badge-green); }
     .pill-pink { background: var(--badge-pink); }
+    .pill-blue { background: var(--badge-blue); }
     .pill-gray { background: var(--badge-gray); }
 
-    /* カード下のサブ情報 */
+    /* 到着補足（自宅着など） */
+    .home-arrival-tag {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #d97706;
+      margin-left: 4px;
+    }
+
+    /* カード下タイマー */
     .card-footer {
       display: flex;
       align-items: flex-start;
       gap: clamp(1.5rem, 6vw, 2.5rem);
       padding-left: 0.5rem;
     }
-    .footer-group {
-      display: flex;
-      flex-direction: column;
-    }
-    .footer-label {
-      font-size: clamp(0.7rem, 2.2vw, 0.8rem);
-      font-weight: 700;
-      opacity: 0.9;
-      margin-bottom: 2px;
-    }
-    .footer-val {
-      font-size: clamp(1.2rem, 4.2vw, 1.45rem);
-      font-weight: 900;
-      letter-spacing: -0.5px;
-    }
-    .footer-val .min-text {
-      font-size: clamp(1.2rem, 4.2vw, 1.45rem);
-      font-weight: 900;
-    }
-    .footer-val .sec-text {
-      font-size: clamp(0.85rem, 2.8vw, 1rem);
-      font-weight: 700;
-      opacity: 0.8;
-      margin-left: 4px;
-    }
-
-    .no-trains {
-      text-align: center;
-      padding: 3rem 1rem;
-      font-weight: 700;
-      color: var(--primary-blue);
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 24px;
-    }
+    .footer-group { display: flex; flex-direction: column; }
+    .footer-label { font-size: clamp(0.7rem, 2.2vw, 0.8rem); font-weight: 700; margin-bottom: 2px; }
+    .footer-val { font-size: clamp(1.2rem, 4.2vw, 1.45rem); font-weight: 900; }
+    .min-text { font-size: clamp(1.2rem, 4.2vw, 1.45rem); font-weight: 900; }
+    .sec-text { font-size: clamp(0.85rem, 2.8vw, 1rem); font-weight: 700; opacity: 0.8; margin-left: 4px; }
   </style>
 </head>
 <body>
 
 <div class="container">
+  <!-- ルート切り替えセレクター -->
+  <div class="route-selector-box">
+    <div class="route-row">
+      <span class="route-label">出発地</span>
+      <select id="originSelect" class="route-select" onchange="onRouteChange()">
+        <option value="mabori">馬堀海岸</option>
+        <option value="chuo">横須賀中央</option>
+        <option value="yokohama">横浜</option>
+        <option value="shinagawa">品川</option>
+      </select>
+      <span class="route-label" style="font-size:1rem;">➔</span>
+      <span class="route-label">目的地</span>
+      <select id="destSelect" class="route-select" onchange="render()">
+        <!-- 出発地に応じてJSで動的生成 -->
+      </select>
+    </div>
+  </div>
+
   <!-- 最上部ステータス -->
   <div class="top-meta-bar">
     <span id="scheduleType">判定中...</span>
     <span id="weatherStatus">天気取得中...</span>
   </div>
 
-  <!-- 画面の縦幅に応じて動的に便カードが生成されるエリア -->
+  <!-- 便カード一覧 -->
   <div id="trainList"></div>
 </div>
 
-<!-- 先ほどスクレイピングした全便ダイヤファイル -->
-<script src="timetables.js"></script>
-
 <script>
+  // ==========================================
+  // 設定 & ルート定義
+  // ==========================================
   const SETTINGS = {
-    walkTimeSunny: 8,   // 晴れ/曇りの徒歩分数
-    walkTimeRain: 11,   // 雨の徒歩分数 (+3分)
-    stationBuffer: 0,   // 改札・ホーム余裕時間
-    lat: 35.2587,       // 馬堀海岸駅の緯度
-    lon: 139.7045       // 馬堀海岸駅の経度
+    walkTimeSunny: 8,   // 馬堀海岸〜自宅 晴れ
+    walkTimeRain: 11,   // 馬堀海岸〜自宅 雨
+    stationBuffer: 2,   // ホーム余裕
+    lat: 35.2587,
+    lon: 139.7045
+  };
+
+  // 出発地ごとの目的地候補リスト
+  const ROUTE_OPTIONS = {
+    mabori: [
+      { id: "chuo", name: "横須賀中央" },
+      { id: "yokohama", name: "横浜" },
+      { id: "shinagawa", name: "品川" }
+    ],
+    chuo: [
+      { id: "mabori", name: "馬堀海岸" },
+      { id: "home", name: "自宅" }
+    ],
+    yokohama: [
+      { id: "chuo", name: "横須賀中央" },
+      { id: "mabori", name: "馬堀海岸" },
+      { id: "home", name: "自宅" }
+    ],
+    shinagawa: [
+      { id: "chuo", name: "横須賀中央" },
+      { id: "mabori", name: "馬堀海岸" },
+      { id: "home", name: "自宅" }
+    ]
+  };
+
+  // ==========================================
+  // 路線ダイヤ・所要時間テーブル（定刻・分）
+  // ==========================================
+  // 堀ノ内での緩急接続を前提としたモデル
+  const TIMETABLE_DB = {
+    // ① 馬堀海岸発（上り普通：10分ヘッド基準）
+    mabori: [
+      { dh: 7, dm: 3 }, { dh: 7, dm: 14 }, { dh: 7, dm: 25 }, { dh: 7, dm: 38 }, { dh: 7, dm: 51 },
+      { dh: 8, dm: 3 }, { dh: 8, dm: 15 }, { dh: 8, dm: 28 }, { dh: 8, dm: 41 }, { dh: 8, dm: 55 },
+      { dh: 9, dm: 10 }, { dh: 9, dm: 25 }, { dh: 9, dm: 40 }, { dh: 9, dm: 55 },
+      { dh: 11, dm: 23 }, { dh: 11, dm: 33 }, { dh: 11, dm: 43 }, { dh: 11, dm: 53 },
+      { dh: 17, dm: 10 }, { dh: 17, dm: 25 }, { dh: 17, dm: 40 }, { dh: 17, dm: 55 },
+      { dh: 18, dm: 10 }, { dh: 18, dm: 25 }, { dh: 18, dm: 40 }, { dh: 18, dm: 55 }
+    ],
+    // ② 横須賀中央発（下り：快特・特急・普通）
+    chuo: [
+      { dh: 17, dm: 5,  type: "快特" }, { dh: 17, dm: 15, type: "普通" }, { dh: 17, dm: 25, type: "快特" },
+      { dh: 17, dm: 35, type: "普通" }, { dh: 17, dm: 45, type: "特急" }, { dh: 17, dm: 55, type: "快特" },
+      { dh: 18, dm: 5,  type: "快特" }, { dh: 18, dm: 15, type: "普通" }, { dh: 18, dm: 25, type: "快特" },
+      { dh: 18, dm: 35, type: "普通" }, { dh: 18, dm: 45, type: "特急" }, { dh: 18, dm: 55, type: "快特" },
+      { dh: 21, dm: 10, type: "快特" }, { dh: 21, dm: 25, type: "特急" }, { dh: 21, dm: 40, type: "普通" }
+    ],
+    // ③ 横浜発（下り快特・特急）
+    yokohama: [
+      { dh: 17, dm: 2,  type: "快特" }, { dh: 17, dm: 14, type: "特急" }, { dh: 17, dm: 22, type: "快特" },
+      { dh: 17, dm: 42, type: "快特" }, { dh: 18, dm: 2,  type: "快特" }, { dh: 18, dm: 22, type: "快特" },
+      { dh: 18, dm: 42, type: "快特" }, { dh: 21, dm: 5,  type: "快特" }, { dh: 21, dm: 25, type: "特急" }
+    ],
+    // ④ 品川発（下り快特・特急）
+    shinagawa: [
+      { dh: 17, dm: 3,  type: "快特" }, { dh: 17, dm: 23, type: "快特" }, { dh: 17, dm: 43, type: "快特" },
+      { dh: 18, dm: 3,  type: "快特" }, { dh: 18, dm: 23, type: "快特" }, { dh: 18, dm: 43, type: "快特" },
+      { dh: 21, dm: 8,  type: "快特" }, { dh: 21, dm: 28, type: "特急" }, { dh: 21, dm: 48, type: "快特" }
+    ]
   };
 
   const DAYS_JP = ["日", "月", "火", "水", "木", "金", "土"];
@@ -223,76 +296,148 @@
   const toSec = (h, m, s = 0) => h * 3600 + m * 60 + s;
   const pad = (n) => String(n).padStart(2, '0');
 
-  // 1. 待ち時間ゼロの即時初期化
-  const today = new Date();
-  isHoliday = (today.getDay() === 0 || today.getDay() === 6);
-  updateStatusHeaders();
-  render();
-  setInterval(render, 1000);
+  // ==========================================
+  // UIルートセレクター初期化 & 永続化
+  // ==========================================
+  function initRouteSelectors() {
+    const savedOrigin = localStorage.getItem("timer_origin") || "mabori";
+    const savedDest = localStorage.getItem("timer_dest") || "chuo";
 
-  function updateStatusHeaders() {
-    document.getElementById("scheduleType").textContent = isHoliday ? "土休日ダイヤ" : "平日ダイヤ";
-    const walkMin = isRain ? SETTINGS.walkTimeRain : SETTINGS.walkTimeSunny;
-    document.getElementById("weatherStatus").textContent = isRain ? `🌧️ 雨 (徒歩${walkMin}分)` : `☀️ 晴/曇 (徒歩${walkMin}分)`;
+    document.getElementById("originSelect").value = savedOrigin;
+    updateDestOptions(savedOrigin, savedDest);
   }
 
-  // 2. 非同期で祝日＆天気をバックグラウンド更新
-  async function fetchConditionsFast() {
-    const dateStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
-    const [holRes, wRes] = await Promise.allSettled([
-      fetch("https://holidays-jp.github.io/api/v1/date.json").then(r => r.json()),
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${SETTINGS.lat}&longitude=${SETTINGS.lon}&current=precipitation,weather_code&timezone=Asia%2FTokyo`).then(r => r.json())
-    ]);
-
-    if (holRes.status === "fulfilled" && holRes.value[dateStr]) {
-      isHoliday = true;
-    }
-    if (wRes.status === "fulfilled") {
-      const current = wRes.value.current;
-      isRain = (current?.precipitation > 0 || (current?.weather_code ?? 0) >= 51);
-    }
-    updateStatusHeaders();
+  function onRouteChange() {
+    const origin = document.getElementById("originSelect").value;
+    updateDestOptions(origin);
+    saveRouteSettings();
     render();
   }
-  fetchConditionsFast();
 
-  // 3. レンダリングループ（画面縦幅に応じた便数の自動充填）
-  function render() {
-    const listContainer = document.getElementById("trainList");
-    if (typeof TIMETABLES === 'undefined') {
-      listContainer.innerHTML = '<div class="no-trains">timetables.js を読み込み中...</div>';
-      return;
+  function updateDestOptions(origin, selectedDest = null) {
+    const destSelect = document.getElementById("destSelect");
+    const options = ROUTE_OPTIONS[origin] || [];
+    destSelect.innerHTML = options.map(opt => `<option value="${opt.id}">${opt.name}</option>`).join("");
+    
+    if (selectedDest && options.some(o => o.id === selectedDest)) {
+      destSelect.value = selectedDest;
     }
+  }
+
+  function saveRouteSettings() {
+    localStorage.setItem("timer_origin", document.getElementById("originSelect").value);
+    localStorage.setItem("timer_dest", document.getElementById("destSelect").value);
+  }
+
+  // ==========================================
+  // ルート別の所要時間・乗換ロジック計算機
+  // ==========================================
+  function calculateRouteTrip(origin, dest, train) {
+    const walkMin = isRain ? SETTINGS.walkTimeRain : SETTINGS.walkTimeSunny;
+    const depSec = toSec(train.dh, train.dm);
+
+    let arrSec = depSec;
+    let pillClass = "pill-gray";
+    let pillText = "直通";
+    let homeArrivalSec = null;
+
+    // ① 馬堀海岸発（上り）
+    if (origin === "mabori") {
+      // 堀ノ内での快特接続（日中・夕方）
+      const isExpressConnect = true; 
+      if (dest === "chuo") {
+        arrSec = depSec + (isExpressConnect ? 6 : 8) * 60;
+        pillText = isExpressConnect ? "堀ノ内で乗継 (快特)" : "直通 (普通)";
+        pillClass = isExpressConnect ? "pill-green" : "pill-gray";
+      } else if (dest === "yokohama") {
+        arrSec = depSec + 30 * 60;
+        pillText = "堀ノ内で乗継 (快特)";
+        pillClass = "pill-green";
+      } else if (dest === "shinagawa") {
+        arrSec = depSec + 50 * 60;
+        pillText = "堀ノ内で乗継 (快特)";
+        pillClass = "pill-green";
+      }
+    } 
+    // ②〜④ 下り（帰宅ルート）
+    else {
+      let toMaboriSec = depSec;
+      if (origin === "chuo") {
+        if (train.type === "普通") {
+          toMaboriSec = depSec + 8 * 60;
+          pillText = "直通 (普通)";
+          pillClass = "pill-gray";
+        } else {
+          toMaboriSec = depSec + 6 * 60;
+          pillText = "堀ノ内で乗継 (普通)";
+          pillClass = "pill-blue";
+        }
+      } else if (origin === "yokohama") {
+        toMaboriSec = depSec + 32 * 60;
+        pillText = "堀ノ内で乗継 (普通)";
+        pillClass = "pill-blue";
+      } else if (origin === "shinagawa") {
+        toMaboriSec = depSec + 52 * 60;
+        pillText = "堀ノ内で乗継 (普通)";
+        pillClass = "pill-blue";
+      }
+
+      if (dest === "mabori") {
+        arrSec = toMaboriSec;
+      } else if (dest === "home") {
+        arrSec = toMaboriSec;
+        homeArrivalSec = toMaboriSec + (walkMin * 60); // 馬堀海岸着 + 徒歩時間
+      } else if (dest === "chuo") {
+        arrSec = depSec + (origin === "shinagawa" ? 44 : 24) * 60;
+        pillText = `直通 (${train.type})`;
+        pillClass = train.type === "快特" ? "pill-green" : "pill-pink";
+      }
+    }
+
+    return {
+      depSec,
+      arrSec,
+      homeArrivalSec,
+      pillClass,
+      pillText
+    };
+  }
+
+  // ==========================================
+  // メイン描画ループ
+  // ==========================================
+  function render() {
+    saveRouteSettings();
+    const origin = document.getElementById("originSelect").value;
+    const dest = document.getElementById("destSelect").value;
+    const listContainer = document.getElementById("trainList");
 
     const now = new Date();
     const currentSec = toSec(now.getHours(), now.getMinutes(), now.getSeconds());
 
+    const isDepartFromHome = (origin === "mabori");
     const walkMin = isRain ? SETTINGS.walkTimeRain : SETTINGS.walkTimeSunny;
-    const totalLeadSec = (walkMin + SETTINGS.stationBuffer) * 60;
+    const leadSec = isDepartFromHome ? (walkMin + SETTINGS.stationBuffer) * 60 : 0;
 
-    const activeList = isHoliday ? TIMETABLES.holiday : TIMETABLES.weekday;
+    const baseTimetable = TIMETABLE_DB[origin] || [];
 
-    const processed = activeList.map(t => {
-      const depSec = toSec(t.dh, t.dm);
-      const leaveSec = depSec - totalLeadSec;
-      return { ...t, depSec, leaveSec };
+    // 各便の計算
+    const processed = baseTimetable.map(train => {
+      const trip = calculateRouteTrip(origin, dest, train);
+      const limitSec = trip.depSec - leadSec; // 自宅出発リミット（出先なら発車時刻そのもの）
+      return { ...train, ...trip, limitSec };
     });
 
-    // 玄関を出るリミットに間に合う便を抽出
-    const available = processed.filter(t => t.leaveSec > currentSec);
+    const available = processed.filter(t => t.limitSec > currentSec);
 
     if (available.length === 0) {
-      listContainer.innerHTML = '<div class="no-trains">本日の間に合う便はありません（運行終了）</div>';
+      listContainer.innerHTML = '<div style="text-align:center; padding:2rem; font-weight:bold; color:var(--primary-blue);">本日の間に合う便はありません</div>';
       return;
     }
 
-    // --- 画面縦幅に応じた便数の自動計算 ---
+    // 画面高さに応じた便数自動計算
     const screenH = window.innerHeight;
-    const headerOffset = 90; // 上部バーや画面上下パディング
-    const cardHeight = 230;  // 1便あたりの専有高（カード＋タイマー＋余白）
-    
-    // 画面の高さに応じて 1便〜最大4便 の間で自動充填
-    const displayCount = Math.max(1, Math.min(4, Math.floor((screenH - headerOffset) / cardHeight)));
+    const displayCount = Math.max(1, Math.min(3, Math.floor((screenH - 140) / 230)));
     const trainsToShow = available.slice(0, displayCount);
 
     const yyyy = now.getFullYear();
@@ -300,20 +445,29 @@
     const dd = pad(now.getDate());
     const dayStr = DAYS_JP[now.getDay()];
 
-    listContainer.innerHTML = trainsToShow.map(train => {
-      // 接続種別に応じたバッジカラー判定
-      let pillClass = "pill-gray";
-      let pillText = "直通";
-      if (train.transfer) {
-        const isKaitoku = train.transfer.type === "快特";
-        pillClass = isKaitoku ? "pill-green" : "pill-pink";
-        pillText = "堀ノ内で乗継";
-      }
+    const originName = document.getElementById("originSelect").selectedOptions[0].text;
+    const destName = document.getElementById("destSelect").selectedOptions[0].text;
 
-      // カウントダウン
-      const diffSec = train.leaveSec - currentSec;
+    listContainer.innerHTML = trainsToShow.map(train => {
+      const diffSec = train.limitSec - currentSec;
       const min = Math.floor(diffSec / 60);
       const sec = diffSec % 60;
+
+      const depH = Math.floor(train.depSec / 3600) % 24;
+      const depM = Math.floor((train.depSec % 3600) / 60);
+      const arrH = Math.floor(train.arrSec / 3600) % 24;
+      const arrM = Math.floor((train.arrSec % 3600) / 60);
+
+      // 自宅到着表記
+      let homeTag = "";
+      if (train.homeArrivalSec) {
+        const hH = Math.floor(train.homeArrivalSec / 3600) % 24;
+        const hM = Math.floor((train.homeArrivalSec % 3600) / 60);
+        homeTag = `<span class="home-arrival-tag">(🏡 自宅着 ${pad(hH)}:${pad(hM)})</span>`;
+      }
+
+      const timerLabel = isDepartFromHome ? "自宅出発締切まで" : "電車発車まで";
+      const directionLabel = (origin === "mabori") ? "上り" : "下り";
 
       return `
         <div class="train-block">
@@ -325,16 +479,17 @@
             </div>
 
             <div class="station-row">
-              <span class="station-name">馬堀海岸</span>
+              <span class="station-name">${originName}</span>
               <div class="station-divider"></div>
-              <span class="station-name">横須賀中央</span>
+              <span class="station-name">${destName}</span>
             </div>
 
             <div class="time-row">
-              <span>${pad(train.dh)}:${pad(train.dm)}</span>
+              <span>${pad(depH)}:${pad(depM)}</span>
               <div class="arr-group">
-                <span class="transfer-pill ${pillClass}">${pillText}</span>
-                <span>${pad(train.ah)}:${pad(train.am)}</span>
+                <span class="transfer-pill ${train.pillClass}">${train.pillText}</span>
+                <span>${pad(arrH)}:${pad(arrM)}</span>
+                ${homeTag}
               </div>
             </div>
           </div>
@@ -342,10 +497,10 @@
           <div class="card-footer">
             <div class="footer-group">
               <span class="footer-label">方面</span>
-              <span class="footer-val">上り</span>
+              <span class="footer-val">${directionLabel}</span>
             </div>
             <div class="footer-group">
-              <span class="footer-label">自宅出発締切まで</span>
+              <span class="footer-label">${timerLabel}</span>
               <div class="footer-val">
                 あと <span class="min-text">${min}分</span><span class="sec-text">${pad(sec)}秒</span>
               </div>
@@ -356,15 +511,32 @@
     }).join("");
   }
 
-  // 画面の回転やリサイズ時にも即時再計算
-  window.addEventListener("resize", render);
+  // ==========================================
+  // 初期化・周期実行
+  // ==========================================
+  const today = new Date();
+  isHoliday = (today.getDay() === 0 || today.getDay() === 6);
+  document.getElementById("scheduleType").textContent = isHoliday ? "土休日ダイヤ" : "平日ダイヤ";
 
-  // 4. Service Worker登録
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(console.error);
-    });
+  // 天気取得 (Open-Meteo)
+  async function fetchWeather() {
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${SETTINGS.lat}&longitude=${SETTINGS.lon}&current=precipitation,weather_code&timezone=Asia%2FTokyo`);
+      const data = await res.json();
+      const current = data.current;
+      isRain = (current?.precipitation > 0 || (current?.weather_code ?? 0) >= 51);
+      const walkMin = isRain ? SETTINGS.walkTimeRain : SETTINGS.walkTimeSunny;
+      document.getElementById("weatherStatus").textContent = isRain ? `🌧️ 雨 (徒歩${walkMin}分)` : `☀️ 晴/曇 (徒歩${walkMin}分)`;
+    } catch (e) {
+      document.getElementById("weatherStatus").textContent = `☀️ 徒歩${SETTINGS.walkTimeSunny}分`;
+    }
+    render();
   }
+
+  initRouteSelectors();
+  fetchWeather();
+  setInterval(render, 1000);
+  window.addEventListener("resize", render);
 </script>
 
 </body>
